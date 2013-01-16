@@ -108,7 +108,7 @@ class FBRANCH<bits<6> op, dag outs, dag ins, string asmstr,
   let Opcode = op;
 
   let Inst{11-10} = cond;
-  let Inst{9-0} = 0;
+  let Inst{9-0}   = 0;
 }
 
 

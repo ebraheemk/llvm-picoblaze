@@ -72,8 +72,12 @@ def Picoblazesrl     : SDNode<"PicoblazeISD::SRL", SDT_PicoblazeShift, []>;
 
 def SDTPicoblazePBP  : SDTypeProfile<1, 0,[SDTCisI8<0>]>;
 def SDTPicoblazePBP2 : SDTypeProfile<1, 2,[SDTCisI8<0>,SDTCisI8<1>,SDTCisI8<2>]>;
+
+def SDTPicoblazeGETBP  : SDTypeProfile<1, 0,[SDTCisI8<0>]>;
+
 def PicoblazePBP     : SDNode<"PicoblazeISD::PBP", SDTPicoblazePBP>;
-def PicoblazePBP2     : SDNode<"PicoblazeISD::PBP2", SDTPicoblazePBP2,[]>;
+def PicoblazePBP2    : SDNode<"PicoblazeISD::PBP2", SDTPicoblazePBP2,[]>;
+def PicoblazeGETBP    : SDNode<"PicoblazeISD::GETBP", SDTPicoblazeGETBP>;
 
 let Defs = [SP, BP], Uses = [SP] in {
 def ADJCALLSTACKDOWN : Pseudo<(outs), (ins i8imm:$amt),
@@ -82,6 +86,10 @@ def ADJCALLSTACKDOWN : Pseudo<(outs), (ins i8imm:$amt),
 def ADJCALLSTACKUP   : Pseudo<(outs), (ins i8imm:$amt1, i8imm:$amt2),
                               "#ADJCALLSTACKUP",
                               [(Picoblazecallseq_end timm:$amt1, timm:$amt2)]>;
+
+def PicoblazeGETBP_INSTR : Pseudo<(outs GR8:$dst), (ins ),
+                              "LOAD $dst,BP ; \t#PicoblazeGETBP_INSTR",
+                              [(set GR8:$dst,(PicoblazeGETBP))]>;
 }
 
 
@@ -114,11 +122,13 @@ def cc : Operand<i8> {
 // Picoblaze Complex Pattern Definitions.
 //===----------------------------------------------------------------------===//
 
-def addr        :  ComplexPattern<iPTR, 2, "SelectAddr", [], []>;
-def addrindexed :  ComplexPattern<iPTR, 1, "SelectAddrIndexed", [], []>; 
-def addrunindexed :  ComplexPattern<iPTR, 1, "SelectAddrUnindexed", [], []>; 
-//def addri       :  ComplexPattern<iPTR, 2, "SelectAddrI", [], []>;
-//def addrr       :  ComplexPattern<iPTR, 2, "SelectAddrR", [], []>;
+def addrframeindex :  ComplexPattern<iPTR, 1, "SelectAddrFrameindex", [frameindex], [SDNPWantParent]>;
+def addr           :  ComplexPattern<iPTR, 2, "SelectAddr", [], []>;
+def addrindexed    :  ComplexPattern<iPTR, 1, "SelectAddrIndexed", [], []>; 
+def addrunindexed  :  ComplexPattern<iPTR, 1, "SelectAddrUnindexed", [], []>; 
+def addrcall       : ComplexPattern<iPTR, 1, "SelectAddrCall", [], []>; 
+//def addri        :  ComplexPattern<iPTR, 2, "SelectAddrI", [], []>;
+//def addrr        :  ComplexPattern<iPTR, 2, "SelectAddrR", [], []>;
 //===----------------------------------------------------------------------===//
 // Pattern Fragments
 //def  and_su : PatFrag<(ops node:$lhs, node:$rhs), (and node:$lhs, node:$rhs), [{
@@ -161,7 +171,43 @@ let isBarrier = 1 in {
 
 
 
+//===----------------------------------------------------------------------===//
+// Call Instructions...
+//
+let isCall = 1 in
+  // All calls clobber the non-callee saved registers. SPW is marked as
+  // a use to prevent stack-pointer assignments that appear immediately
+  // before calls from potentially appearing dead. Uses for argument
+  // registers are added manually.
+  let Defs = [Sa, Sb,Sc,Sd, STATUS],
+      Uses = [STATUS] in {
+    def CALL0 : FBRANCH<0x0,
+                          (outs), (ins GR8:$dst),
+                          "call \t$dst ;call0", 
+						  [(Picoblazecall addrcall:$dst)]>;
+ 
+  
 
+    def CALL1 : FBRANCH<0x0,
+                          (outs), (ins i16imm:$dst),
+                          "call \t$dst ; call1", 
+						  [(Picoblazecall addrcall:$dst)]>;
+
+    def CALL2 : FBRANCH<0x0,
+                          (outs), (ins GR16:$dst),
+                          "call \t$dst ;call2", 
+						  [(Picoblazecall addrcall:$dst)]>;
+ 
+    def CALL3 : FBRANCH<0x0,
+                          (outs), (ins i16imm:$dst),
+                          "call \t$dst ; call3", 
+						  [(Picoblazecall addrcall:$dst)]>;
+
+   def CALL4: FBRANCH<0x0,
+                          (outs), (ins GR8:$dst),
+                          "call \t$dst ;call4", 
+						  [(Picoblazecall  (PicoblazeWrapper  addrcall:$dst) )]>;
+  }
 
 
 
@@ -182,6 +228,7 @@ let  mayLoad=1 in {
 
 
 
+/*
 def FETCH_I  : FALUI<0b101110,
                    (outs GR8:$dst), (ins  memsrc:$src),
                    "FETCH \t{$dst,$src}",
@@ -191,8 +238,19 @@ def FETCH_R  : FALUI<0b101111,
                    (outs GR8:$dst), (ins  GR8:$src),
                    "FETCH \t{$dst,$src}",
                    [( set GR8:$dst ,(unindexedload addr:$src) )]>;
+*/
+def FETCH_I  : FALUI<0b101110,
+                   (outs GR8:$dst), (ins  i8imm:$src),
+                   "FETCH \t{$dst,$src}",
+                   [( set GR8:$dst,(load imm:$src))]>;
+
+def FETCH_R  : FALUI<0b101110,
+                   (outs GR8:$dst), (ins  GR8:$src),
+                   "FETCH \t{$dst,$src}",
+                   [( set GR8:$dst,(load GR8:$src))]>;
 
 }
+
 
  let Constraints = "$src = $dst" ,
 	 Defs = [STATUS], 
@@ -298,16 +356,17 @@ let  mayStore=1 in {
 def STORE_I  : FALUI<0b101110,
                    (outs), (ins i8imm:$dst, GR8:$value),
                    "STORE \t{$value,$dst}",
-                   [(store GR8:$value , addrunindexed:$dst)]>;
+                   [(store GR8:$value , imm:$dst)]>;
 
 def STORE_R  : FALUI<0b101111,
                    (outs), (ins GR8:$dst, GR8:$value),
                    "STORE \t{$value,$dst}",
-                   [(store GR8:$value, addrunindexed:$dst)]>;
-
-
+                   [(store GR8:$value, GR8:$dst)]>;
 
 }
+
+
+
 let isReMaterializable = 1, isAsCheapAsAMove = 1 in {
 
 def LOADBP  : Pseudo<(outs GR8:$dst ), (ins  GR8:$src ,GR8:$src2),
@@ -315,8 +374,23 @@ def LOADBP  : Pseudo<(outs GR8:$dst ), (ins  GR8:$src ,GR8:$src2),
                    [( set GR8:$dst , ( PicoblazePBP2 GR8:$src , GR8:$src2) ) ]
 				   >;
  }
-//def : Pat<( istore GR8:$val , GR8:$base , i8imm:$offset) ,
-//         (  STORE_I GR8:$val , ( ADD8ri GR8:$base ,i8imm:$offset) ) >;
+ /*
+ let mayLoad = 1 in {
+ def FETCH_R2  : Pseudo<
+                   (outs GR8:$dst), (ins  i8imm:$src),
+                   "FETCH \t{$dst,$src} ;\t FETCH_R2",
+                   [( set GR8:$dst,(load addrframeindex :$src))]>;
+
+}				  
+ let mayStore = 1 in {
+ def STORE_R2  : Pseudo<
+                   (outs ), (ins  GR8:$val ,i8imm:$src),
+                   "STORE \t{$val,$src} ;\t STORE_R2",
+                   [( store GR8:$val, addrframeindex :$src)]>;
+
+}				  
+
+*/
 
 
 

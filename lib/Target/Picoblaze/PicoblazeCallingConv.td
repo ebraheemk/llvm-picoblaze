@@ -30,5 +30,5 @@ def CC_Picoblaze : CallingConv<[
 
   // Integer values get stored in stack slots that are 2 bytes in
   // size and 2-byte aligned.
-  CCIfType<[i16], CCAssignToStack<2, 2>>
+  CCIfType<[i8], CCAssignToStack<1, 1>>
 ]>;

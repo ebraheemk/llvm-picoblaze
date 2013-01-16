@@ -95,16 +95,16 @@ void PicoblazeInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                                   bool KillSrc) const 
 {
 	PR_FUNCTION();
-	/*
+	
   unsigned Opc;
   if (Picoblaze::GR8RegClass.contains(DestReg, SrcReg))
-    Opc = Picoblaze::MOV8rr;
+    Opc = Picoblaze::LOAD_REG;
   else
     llvm_unreachable("Impossible reg-to-reg copy");
 
   BuildMI(MBB, I, DL, get(Opc), DestReg)
     .addReg(SrcReg, getKillRegState(KillSrc));
-	*/
+	
 }
 
 

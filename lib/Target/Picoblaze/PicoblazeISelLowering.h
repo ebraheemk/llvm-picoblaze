@@ -63,7 +63,8 @@ namespace llvm {
 
       /// SHL, SRA, SRL - Non-constant shifts.
       SHL, SRA, SRL,
-	  PBP,PBP2
+	  PBP,PBP2,
+	  GETBP
     };
   }
 
@@ -177,6 +178,7 @@ namespace llvm {
     const DataLayout *TD;
 	SDValue PicoblazeTargetLowering::LowerLoadStore(SDValue Op,
                                              SelectionDAG &DAG) const;
+
   };
 } // namespace llvm
 

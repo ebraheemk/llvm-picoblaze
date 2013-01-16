@@ -781,7 +781,6 @@ void SelectionDAGISel::DoInstructionSelection() {
   }
 
   DEBUG(errs() << "===== Instruction selection ends:\n");
-
   PostprocessISelDAG();
 }
 

@@ -68,6 +68,7 @@ PicoblazeTargetLowering::PicoblazeTargetLowering(PicoblazeTargetMachine &tm) :
   // Set up the register classes.
   // 我们只支持8位的操作
   addRegisterClass(MVT::i8,  &Picoblaze::GR8RegClass);
+//  addRegisterClass(MVT::i16,  &Picoblaze::GR16RegClass);
   
 
   // Compute derived properties from the register classes
@@ -91,19 +92,7 @@ PicoblazeTargetLowering::PicoblazeTargetLowering(PicoblazeTargetMachine &tm) :
      Custom      // Use the LowerOperation hook to implement custom lowering.
    };
 */
-  // We do NOT have post-incremented loads / stores.
-  /* setIndexedLoadAction(ISD::UNINDEXED, MVT::i8, Expand);
-   setIndexedLoadAction(ISD::PRE_INC, MVT::i8, Custom);
-   setIndexedLoadAction(ISD::PRE_DEC, MVT::i8, Custom);
-   setIndexedLoadAction(ISD::POST_INC, MVT::i8, Custom);
-   setIndexedLoadAction(ISD::POST_DEC, MVT::i8, Custom);
 
-   setIndexedStoreAction(ISD::UNINDEXED, MVT::i8, Custom);
-   setIndexedStoreAction(ISD::PRE_INC, MVT::i8, Custom);
-   setIndexedStoreAction(ISD::PRE_DEC, MVT::i8, Custom);
-   setIndexedStoreAction(ISD::POST_INC, MVT::i8, Custom);
-   setIndexedStoreAction(ISD::POST_DEC, MVT::i8, Custom);
-*/
   setLoadExtAction(ISD::EXTLOAD,  MVT::i1,  Promote);
   setLoadExtAction(ISD::SEXTLOAD, MVT::i1,  Promote);
   setLoadExtAction(ISD::ZEXTLOAD, MVT::i1,  Promote);
@@ -152,26 +141,30 @@ PicoblazeTargetLowering::PicoblazeTargetLowering(PicoblazeTargetMachine &tm) :
   setOperationAction(ISD::MULHU,            MVT::i8,    Expand);
   setOperationAction(ISD::SMUL_LOHI,        MVT::i8,    Expand);
   setOperationAction(ISD::UMUL_LOHI,        MVT::i8,    Expand);
-
   setOperationAction(ISD::UDIV,             MVT::i8,    Expand);
   setOperationAction(ISD::UDIVREM,          MVT::i8,    Expand);
   setOperationAction(ISD::UREM,             MVT::i8,    Expand);
   setOperationAction(ISD::SDIV,             MVT::i8,    Expand);
   setOperationAction(ISD::SDIVREM,          MVT::i8,    Expand);
   setOperationAction(ISD::SREM,             MVT::i8,    Expand);
+
+
+  setOperationAction(ISD::GlobalAddress,    MVT::i8,   Custom);
   setOperationAction(ISD::GlobalAddress,    MVT::i16,   Custom);
-  setOperationAction(ISD::TargetGlobalAddress,    MVT::i16,   Custom);
+  setOperationAction(ISD::ExternalSymbol,    MVT::i16,   Custom);
+  setOperationAction(ISD::ExternalSymbol,    MVT::i8,   Custom);
+  //setOperationAction(ISD::TargetGlobalAddress,    MVT::i16,   Custom);
   setOperationAction(ISD::FrameIndex,    MVT::i8,   Legal);
 
   // Libcalls names.
-  if (HWMultMode == HWMultIntr) {
+ /* if (HWMultMode == HWMultIntr) {
     setLibcallName(RTLIB::MUL_I8,  "__mulqi3hw");
     setLibcallName(RTLIB::MUL_I16, "__mulhi3hw");
   } else if (HWMultMode == HWMultNoIntr) {
     setLibcallName(RTLIB::MUL_I8,  "__mulqi3hw_noint");
     setLibcallName(RTLIB::MUL_I16, "__mulhi3hw_noint");
   }
-
+  */
   setMinFunctionAlignment(0);
   setPrefFunctionAlignment(0);
 }
@@ -200,7 +193,19 @@ SDValue PicoblazeTargetLowering::LowerOperation(SDValue Op,
 	  {
 		  return LowerFrameIndex(Op,DAG);
 	  }
+ case PicoblazeISD::CALL:
+	  {
+		SDValue vop1,vop2,vret;
+		DebugLoc dl=Op.getDebugLoc();
+		Op->getNumValues();
+		vop1 = DAG.getConstant(0,Op->getValueType(0));
+		vop2 = DAG.getNode(PicoblazeISD::PBP,dl,Op->getValueType(0));
+		return vret = DAG.getNode(PicoblazeISD::CALL,dl,Op->getValueType(0),vop1,vop2);
+			  
+	  }
+	  break;
   default:
+	  DAG.viewGraph();
     llvm_unreachable("unimplemented operand");
   }
 }
@@ -538,11 +543,14 @@ PicoblazeTargetLowering::LowerCCCCallTo(SDValue Chain, SDValue Callee,
   // turn it into a TargetGlobalAddress node so that legalize doesn't hack it.
   // Likewise ExternalSymbol -> TargetExternalSymbol.
 
-  //if (GlobalAddressSDNode *G = dyn_cast<GlobalAddressSDNode>(Callee))
-   // Callee = DAG.getTargetGlobalAddress(G->getGlobal(), dl, MVT::i16);
-  //else if (ExternalSymbolSDNode *E = dyn_cast<ExternalSymbolSDNode>(Callee))
-  //  Callee = DAG.getTargetExternalSymbol(E->getSymbol(), MVT::i16);
-
+  if (GlobalAddressSDNode *G = dyn_cast<GlobalAddressSDNode>(Callee))
+  {
+    Callee = DAG.getGlobalAddress(G->getGlobal(), dl, MVT::i8);
+  }
+  else if (ExternalSymbolSDNode *E = dyn_cast<ExternalSymbolSDNode>(Callee))
+  {
+	  Callee = DAG.getExternalSymbol(E->getSymbol(), MVT::i8);
+  }
   // Returns a chain & a flag for retval copy to use.
   SDVTList NodeTys = DAG.getVTList(MVT::Other, MVT::Glue);
   SmallVector<SDValue, 8> Ops;
@@ -559,6 +567,7 @@ PicoblazeTargetLowering::LowerCCCCallTo(SDValue Chain, SDValue Callee,
     Ops.push_back(InFlag);
 
   Chain = DAG.getNode(PicoblazeISD::CALL, dl, NodeTys, &Ops[0], Ops.size());
+
   InFlag = Chain.getValue(1);
 
   // Create the CALLSEQ_END node.
@@ -1140,7 +1149,9 @@ const char *PicoblazeTargetLowering::getTargetNodeName(unsigned Opcode) const {
   case PicoblazeISD::SHL:                return "PicoblazeISD::SHL";
   case PicoblazeISD::SRA:                return "PicoblazeISD::SRA";
   case PicoblazeISD::PBP:                return "PicoblazeISD::PBP";
+  case PicoblazeISD::GETBP:             return "PicoblazeISD::GETBP";
   }
+
 }
 
 bool PicoblazeTargetLowering::isTruncateFree(Type *Ty1,
