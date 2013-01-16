@@ -20,6 +20,7 @@ const char *Triple::getArchTypeName(ArchType Kind) {
   case UnknownArch: return "unknown";
 
   case arm:     return "arm";
+  case picoblaze:     return "picoblaze";
   case cellspu: return "cellspu";
   case hexagon: return "hexagon";
   case mips:    return "mips";
@@ -53,7 +54,8 @@ const char *Triple::getArchTypePrefix(ArchType Kind) {
   switch (Kind) {
   default:
     return 0;
-
+  case picoblaze:
+    return "picoblaze";
   case arm:
   case thumb:   return "arm";
 
@@ -180,6 +182,7 @@ Triple::ArchType Triple::getArchTypeForLLVMName(StringRef Name) {
     .Case("amdil", amdil)
     .Case("spir", spir)
     .Case("spir64", spir64)
+    .Case("picoblaze", picoblaze)
     .Default(UnknownArch);
 }
 
@@ -206,6 +209,7 @@ const char *Triple::getArchNameForAssembler() {
     .Case("amdil", "amdil")
     .Case("spir", "spir")
     .Case("spir64", "spir64")
+    .Case("picoblaze", "picoblaze")
     .Default(NULL);
 }
 
@@ -242,6 +246,7 @@ static Triple::ArchType parseArch(StringRef ArchName) {
     .Case("amdil", Triple::amdil)
     .Case("spir", Triple::spir)
     .Case("spir64", Triple::spir64)
+    .Case("picoblaze", Triple::picoblaze)
     .Default(Triple::UnknownArch);
 }
 
@@ -660,6 +665,8 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
 
   case llvm::Triple::msp430:
     return 16;
+  case llvm::Triple::picoblaze:
+    return 16;
 
   case llvm::Triple::amdil:
   case llvm::Triple::arm:
@@ -739,6 +746,7 @@ Triple Triple::get32BitArchVariant() const {
   case Triple::sparcv9:   T.setArch(Triple::sparc);   break;
   case Triple::x86_64:    T.setArch(Triple::x86);     break;
   case Triple::spir64:    T.setArch(Triple::spir);    break;
+  case Triple::picoblaze:    T.setArch(Triple::picoblaze);    break;
   }
   return T;
 }
@@ -778,6 +786,7 @@ Triple Triple::get64BitArchVariant() const {
   case Triple::sparc:   T.setArch(Triple::sparcv9);   break;
   case Triple::x86:     T.setArch(Triple::x86_64);    break;
   case Triple::spir:    T.setArch(Triple::spir64);    break;
+  case Triple::picoblaze:    T.setArch(Triple::picoblaze);    break;
   }
   return T;
 }
