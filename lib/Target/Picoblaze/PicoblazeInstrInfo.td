@@ -70,13 +70,13 @@ def Picoblazeshl     : SDNode<"PicoblazeISD::SHL", SDT_PicoblazeShift, []>;
 def Picoblazesra     : SDNode<"PicoblazeISD::SRA", SDT_PicoblazeShift, []>;
 def Picoblazesrl     : SDNode<"PicoblazeISD::SRL", SDT_PicoblazeShift, []>;
 
-def SDTPicoblazePBP  : SDTypeProfile<1, 0,[SDTCisI8<0>]>;
-def SDTPicoblazePBP2 : SDTypeProfile<1, 2,[SDTCisI8<0>,SDTCisI8<1>,SDTCisI8<2>]>;
+//def SDTPicoblazePBP  : SDTypeProfile<1, 0,[SDTCisI8<0>]>;
+//def SDTPicoblazePBP2 : SDTypeProfile<1, 2,[SDTCisI8<0>,SDTCisI8<1>,SDTCisI8<2>]>;
 
 def SDTPicoblazeGETBP  : SDTypeProfile<1, 0,[SDTCisI8<0>]>;
 
-def PicoblazePBP     : SDNode<"PicoblazeISD::PBP", SDTPicoblazePBP>;
-def PicoblazePBP2    : SDNode<"PicoblazeISD::PBP2", SDTPicoblazePBP2,[]>;
+//def PicoblazePBP     : SDNode<"PicoblazeISD::PBP", SDTPicoblazePBP>;
+//def PicoblazePBP2    : SDNode<"PicoblazeISD::PBP2", SDTPicoblazePBP2,[]>;
 def PicoblazeGETBP    : SDNode<"PicoblazeISD::GETBP", SDTPicoblazeGETBP>;
 
 let Defs = [SP, BP], Uses = [SP] in {
@@ -87,11 +87,13 @@ def ADJCALLSTACKUP   : Pseudo<(outs), (ins i8imm:$amt1, i8imm:$amt2),
                               "#ADJCALLSTACKUP",
                               [(Picoblazecallseq_end timm:$amt1, timm:$amt2)]>;
 
+
+}
+let Uses = [BP] in {
 def PicoblazeGETBP_INSTR : Pseudo<(outs GR8:$dst), (ins ),
                               "LOAD $dst,BP ; \t#PicoblazeGETBP_INSTR",
                               [(set GR8:$dst,(PicoblazeGETBP))]>;
-}
-
+					}
 
 //===----------------------------------------------------------------------===//
 // Picoblaze Operand Definitions.
@@ -193,10 +195,10 @@ let isCall = 1 in
                           "call \t$dst ; call1", 
 						  [(Picoblazecall addrcall:$dst)]>;
 
-    def CALL2 : FBRANCH<0x0,
-                          (outs), (ins GR16:$dst),
-                          "call \t$dst ;call2", 
-						  [(Picoblazecall addrcall:$dst)]>;
+    //def CALL2 : FBRANCH<0x0,
+    //                      (outs), (ins GR16:$dst),
+    //                      "call \t$dst ;call2", 
+	//					  [(Picoblazecall addrcall:$dst)]>;
  
     def CALL3 : FBRANCH<0x0,
                           (outs), (ins i16imm:$dst),
@@ -216,37 +218,29 @@ let isCall = 1 in
 // Move Instructions
 
 // FIXME: Provide proper encoding!
-let neverHasSideEffects = 1 in {
+
 def LOAD_REG   :   FALUI<0b000001,
                    (outs GR8:$dst), (ins GR8:$src),
-                   "LOAD \t{$dst, $src}",
+                   "LOAD \t{$dst, $src} ;\tLOAD_REG",
                    []>;
-
-}
+def LOAD_REGI   :   FALUI<0b000001,
+                   (outs GR8:$dst), (ins i8imm:$src),
+                   "LOAD \t{$dst, $src} ;\tLOAD_REGI",
+                   [ (set GR8:$dst ,imm:$src)]>;
+//}
 
 let  mayLoad=1 in {
 
 
 
-/*
-def FETCH_I  : FALUI<0b101110,
-                   (outs GR8:$dst), (ins  memsrc:$src),
-                   "FETCH \t{$dst,$src}",
-                   [( set GR8:$dst,(unindexedload addr:$src))]>;
-
-def FETCH_R  : FALUI<0b101111,
-                   (outs GR8:$dst), (ins  GR8:$src),
-                   "FETCH \t{$dst,$src}",
-                   [( set GR8:$dst ,(unindexedload addr:$src) )]>;
-*/
 def FETCH_I  : FALUI<0b101110,
                    (outs GR8:$dst), (ins  i8imm:$src),
-                   "FETCH \t{$dst,$src}",
+                   "FETCH \t{$dst,$src} ;\tFETCH_I",
                    [( set GR8:$dst,(load imm:$src))]>;
 
 def FETCH_R  : FALUI<0b101110,
                    (outs GR8:$dst), (ins  GR8:$src),
-                   "FETCH \t{$dst,$src}",
+                   "FETCH \t{$dst,$src} ;\tFETCH_R",
                    [( set GR8:$dst,(load GR8:$src))]>;
 
 }
@@ -280,14 +274,7 @@ def SUBC8ri  :  FALUI<0x0,
                     ]>;
 
 }
-let neverHasSideEffects = 1 in {
 
-def PBP_I  :  FALUI<0x0,
-                   (outs GR8:$dst), (ins),
-                   "LOAD  \t{ $dst , BP \t;PBP}",
-                   [(set GR8:$dst,(PicoblazePBP))
-                    ]>;
-}
 
 let Constraints = "$src = $dst"  in {
 
@@ -340,7 +327,7 @@ def : Pat<(sub GR8:$src, GR8:$src2),
 
 
 // FIXME: Provide proper encoding!
-let isReMaterializable = 1, isAsCheapAsAMove = 1 in {
+let  isAsCheapAsAMove = 1 in {
 def LOAD_I     : FALUI<0b000000,
                    (outs GR8:$dst), (ins i8imm:$src),
                    "LOAD\t{$dst, $src}",
@@ -367,30 +354,7 @@ def STORE_R  : FALUI<0b101111,
 
 
 
-let isReMaterializable = 1, isAsCheapAsAMove = 1 in {
 
-def LOADBP  : Pseudo<(outs GR8:$dst ), (ins  GR8:$src ,GR8:$src2),
-                   "LOAD \t$dst,$src \t;LOADBP $dst,$src $src2\t ",
-                   [( set GR8:$dst , ( PicoblazePBP2 GR8:$src , GR8:$src2) ) ]
-				   >;
- }
- /*
- let mayLoad = 1 in {
- def FETCH_R2  : Pseudo<
-                   (outs GR8:$dst), (ins  i8imm:$src),
-                   "FETCH \t{$dst,$src} ;\t FETCH_R2",
-                   [( set GR8:$dst,(load addrframeindex :$src))]>;
-
-}				  
- let mayStore = 1 in {
- def STORE_R2  : Pseudo<
-                   (outs ), (ins  GR8:$val ,i8imm:$src),
-                   "STORE \t{$val,$src} ;\t STORE_R2",
-                   [( store GR8:$val, addrframeindex :$src)]>;
-
-}				  
-
-*/
 
 
 

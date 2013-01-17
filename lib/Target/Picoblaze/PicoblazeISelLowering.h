@@ -63,7 +63,7 @@ namespace llvm {
 
       /// SHL, SRA, SRL - Non-constant shifts.
       SHL, SRA, SRL,
-	  PBP,PBP2,
+	  //PBP,PBP2,
 	  GETBP
     };
   }

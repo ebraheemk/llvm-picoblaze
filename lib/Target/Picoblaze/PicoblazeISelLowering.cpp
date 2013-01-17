@@ -195,15 +195,15 @@ SDValue PicoblazeTargetLowering::LowerOperation(SDValue Op,
 	  }
  case PicoblazeISD::CALL:
 	  {
-		SDValue vop1,vop2,vret;
-		DebugLoc dl=Op.getDebugLoc();
-		Op->getNumValues();
-		vop1 = DAG.getConstant(0,Op->getValueType(0));
-		vop2 = DAG.getNode(PicoblazeISD::PBP,dl,Op->getValueType(0));
-		return vret = DAG.getNode(PicoblazeISD::CALL,dl,Op->getValueType(0),vop1,vop2);
+		//SDValue vop1,vop2,vret;
+		//DebugLoc dl=Op.getDebugLoc();
+		//Op->getNumValues();
+		//vop1 = DAG.getConstant(0,Op->getValueType(0));
+		//vop2 = DAG.getNode(PicoblazeISD::PBP,dl,Op->getValueType(0));
+		//return vret = DAG.getNode(PicoblazeISD::CALL,dl,Op->getValueType(0),vop1,vop2);
 			  
 	  }
-	  break;
+	  //break;
   default:
 	  DAG.viewGraph();
     llvm_unreachable("unimplemented operand");
@@ -1065,15 +1065,16 @@ SDValue PicoblazeTargetLowering::LowerLoadStore(SDValue Op,
 SDValue PicoblazeTargetLowering::LowerFrameIndex(SDValue Op,
                                              SelectionDAG &DAG) const {
 												 PR_FUNCTION();
-	SDValue vop1,vop2,vret;
-	DebugLoc dl=Op.getDebugLoc();
-	Op->getNumValues();
-	vop1 = DAG.getConstant(0,Op->getValueType(0));
-	vop2 = DAG.getNode(PicoblazeISD::PBP,dl,Op->getValueType(0));
-	vret = DAG.getNode(ISD::ADD,dl,Op->getValueType(0),vop1,vop2);
+												assert(false);
+//	SDValue vop1,vop2,vret;
+//	DebugLoc dl=Op.getDebugLoc();
+//	Op->getNumValues();
+//	vop1 = DAG.getConstant(0,Op->getValueType(0));
+//	vop2 = DAG.getNode(PicoblazeISD::PBP,dl,Op->getValueType(0));
+//	vret = DAG.getNode(ISD::ADD,dl,Op->getValueType(0),vop1,vop2);
 	
 	
-	return vret;
+	return SDValue();
 }
 
 SDValue PicoblazeTargetLowering::LowerFRAMEADDR(SDValue Op,
@@ -1148,7 +1149,7 @@ const char *PicoblazeTargetLowering::getTargetNodeName(unsigned Opcode) const {
   case PicoblazeISD::SELECT_CC:          return "PicoblazeISD::SELECT_CC";
   case PicoblazeISD::SHL:                return "PicoblazeISD::SHL";
   case PicoblazeISD::SRA:                return "PicoblazeISD::SRA";
-  case PicoblazeISD::PBP:                return "PicoblazeISD::PBP";
+  //case PicoblazeISD::PBP:                return "PicoblazeISD::PBP";
   case PicoblazeISD::GETBP:             return "PicoblazeISD::GETBP";
   }
 

@@ -71,7 +71,7 @@ BitVector PicoblazeRegisterInfo::getReservedRegs(const MachineFunction &MF) cons
   Reserved.set(Picoblaze::BP);
   Reserved.set(Picoblaze::SP);
   Reserved.set(Picoblaze::STATUS);
-  Reserved.set(Picoblaze::PC);
+//  Reserved.set(Picoblaze::PC);
 
 
   return Reserved;

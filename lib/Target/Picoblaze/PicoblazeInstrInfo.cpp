@@ -95,7 +95,7 @@ void PicoblazeInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                                   bool KillSrc) const 
 {
 	PR_FUNCTION();
-	
+	printf("%d,%d\n",DestReg,SrcReg);
   unsigned Opc;
   if (Picoblaze::GR8RegClass.contains(DestReg, SrcReg))
     Opc = Picoblaze::LOAD_REG;

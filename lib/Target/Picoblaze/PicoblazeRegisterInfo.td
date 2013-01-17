@@ -42,7 +42,7 @@ def BP : PicoblazeReg<14, "BP">;
 def SP     : PicoblazeReg<15, "SP">;
 def STATUS  : PicoblazeReg<16, "Status">;
 
-def PC  : PicoblazeReg<17, "PC">;
+//def PC  : PicoblazeReg<17, "PC">;
 
 
 def GR8 : RegisterClass<"Picoblaze", [i8], 8,
@@ -54,9 +54,9 @@ def GR8 : RegisterClass<"Picoblaze", [i8], 8,
    SP,
    STATUS)>;
 
-def GR16 : RegisterClass<"Picoblaze", [i16], 16,
+//def GR16 : RegisterClass<"Picoblaze", [i16], 16,
    // Volatile registers
-  ( add 
-   PC
-  )>
-  ;
+//  ( add 
+//   PC
+//  )>
+//  ;

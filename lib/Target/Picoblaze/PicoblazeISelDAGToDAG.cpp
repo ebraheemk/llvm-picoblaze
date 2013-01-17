@@ -358,32 +358,6 @@ bool PicoblazeDAGToDAGISel::SelectAddrUnindexed(SDValue N, SDValue &Base)
 	PR_FUNCTION();
 	Base=N;
 	return true;
-
-	PicoblazeISelAddressMode AM;
-    if (MatchAddress(N, AM))
-     return false;
-	SDValue base,disp;
-	SelectAddr(N,base,disp);
-	
-	SDNode *n=CurDAG->getMachineNode(Picoblaze::ADD8ri,   N->getDebugLoc(), TLI.getPointerTy(),
-                                   base,
-                                   disp);
-	//CurDAG->viewGraph();
-	 //Base=CurDAG->getNode(ISD::ADD, N->getDebugLoc(), TLI.getPointerTy(),
-      //                             base,
-       //                            disp);
-	Base = SDValue(n,0);
-	 return true;
-   //PicoblazeISelAddressMode AM;
-
-   if (MatchAddress(N, AM))
-     return false;
-    if(AM.BaseType==PicoblazeISelAddressMode::RegBase)
-	{
-		SDValue Disp;
-		return SelectAddr(N,Base,Disp);
-	}
-	return false;
 }
 
 bool PicoblazeDAGToDAGISel::SelectAddrCall(SDValue N, SDValue &Base)
@@ -430,6 +404,7 @@ SelectInlineAsmMemoryOperand(const SDValue &Op, char ConstraintCode,
 SDNode *PicoblazeDAGToDAGISel::Select(SDNode *Node) 
 {
 	PR_FUNCTION();
+	//CurDAG->viewGraph();
   DebugLoc dl = Node->getDebugLoc();
 
   // Dump information about the Node being selected
@@ -465,15 +440,31 @@ SDNode *PicoblazeDAGToDAGISel::Select(SDNode *Node)
 	
              FrameIndexSDNode*FG=dyn_cast<FrameIndexSDNode>(Node);
 	       SDValue c = CurDAG->getTargetConstant(FG->getIndex(), MVT::i8);
-		SDValue r ( CurDAG->getMachineNode(Picoblaze::PicoblazeGETBP_INSTR,
+
+	      SDNode *n1= CurDAG->getMachineNode(Picoblaze::LOAD_REGI,
 										  Node->getDebugLoc(),
-										  MVT::i8),0);
-		SDValue newNode=CurDAG->getNode(
-			   ISD::ADD, Node->getDebugLoc(),MVT::i8,
-								c,
-								r);
-		ReplaceUses(SDValue(Node, 0), newNode);
-		return Node;
+										  MVT::i8,
+										  c);
+
+	      SDNode *n2= CurDAG->getMachineNode(Picoblaze::PicoblazeGETBP_INSTR,
+										  Node->getDebugLoc(),
+										  MVT::i8);
+	      SDNode *n3= CurDAG->getMachineNode(Picoblaze::LOAD_REG,
+										  Node->getDebugLoc(),
+										  MVT::i8,
+										  SDValue(n2,0));
+		//SDNode *n4= CurDAG->getMachineNode(  Picoblaze::ADD8rr,
+		//								  Node->getDebugLoc(),
+		//								  MVT::i8,
+		//								  SDValue(n1,0) ,
+		//								  SDValue(n3,0)
+		//								  );
+										  
+	   // SDNode *n3=	this->SelectCode(sdv.getNode());
+	    
+	   return CurDAG->SelectNodeTo(Node,Picoblaze::ADD8rr,MVT::i8,SDValue(n1,0),SDValue(n3,0));
+	   									 
+		
 
 /*
 	  assert(Node->getValueType(0) == MVT::i8);
@@ -519,54 +510,5 @@ SDNode *PicoblazeDAGToDAGISel::Select(SDNode *Node)
 
  void PicoblazeDAGToDAGISel::PreprocessISelDAG() 
 {
-	 // Select target instructions for the DAG.
-  {
-    // Number all nodes with a topological order and set DAGSize.
-    DAGSize = CurDAG->AssignTopologicalOrder();
-
-    // Create a dummy node (which is not added to allnodes), that adds
-    // a reference to the root node, preventing it from being deleted,
-    // and tracking any changes of the root.
-    HandleSDNode Dummy(CurDAG->getRoot());
-    SelectionDAG::allnodes_iterator ISelPosition (CurDAG->getRoot().getNode());
-    ++ISelPosition;
-
-    // Make sure that ISelPosition gets properly updated when nodes are deleted
-    // in calls made from this function.
-    ISelUpdater ISU(*CurDAG, ISelPosition);
-
-    // The AllNodes list is now topological-sorted. Visit the
-    // nodes by starting at the end of the list (the root of the
-    // graph) and preceding back toward the beginning (the entry
-    // node).
-    while (ISelPosition != CurDAG->allnodes_begin()) {
-      SDNode *Node = --ISelPosition;
-      // Skip dead nodes. DAGCombiner is expected to eliminate all dead nodes,
-      // but there are currently some corner cases that it misses. Also, this
-      // makes it theoretically possible to disable the DAGCombiner.
-      if (Node->use_empty())
-        continue;
-
-      SDNode *ResNode = Select(Node);
-
-      // FIXME: This is pretty gross.  'Select' should be changed to not return
-      // anything at all and this code should be nuked with a tactical strike.
-
-      // If node should not be replaced, continue with the next one.
-      if (ResNode == Node || Node->getOpcode() == ISD::DELETED_NODE)
-        continue;
-      // Replace node.
-      if (ResNode)
-        ReplaceUses(Node, ResNode);
-
-      // If after the replacement this node is not used any more,
-      // remove this dead node.
-      if (Node->use_empty()) // Don't delete EntryToken, etc.
-        CurDAG->RemoveDeadNode(Node);
-    }
-
-    CurDAG->setRoot(Dummy.getValue());
-  }
-
-  DEBUG(errs() << "===== Instruction selection ends:\n");
+	
 }
