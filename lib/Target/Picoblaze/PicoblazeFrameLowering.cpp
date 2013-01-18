@@ -68,8 +68,8 @@ void PicoblazeFrameLowering::emitPrologue(MachineFunction &MF) const
     MFI->setOffsetAdjustment(-NumBytes);
 
     // Save BP into the appropriate stack slot...
-    BuildMI(MBB, MBBI, DL, TII.get(Picoblaze::LOAD_REG))
-        .addReg(Picoblaze::BP)
+    BuildMI(MBB, MBBI, DL, TII.get(Picoblaze::LOAD_REG),Picoblaze::BP)
+        //.addReg(Picoblaze::BP)
         .addReg(Picoblaze::SP);
 
     // Update FPW with the new base value...

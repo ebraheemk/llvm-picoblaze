@@ -89,6 +89,16 @@ def ADJCALLSTACKUP   : Pseudo<(outs), (ins i8imm:$amt1, i8imm:$amt2),
 
 
 }
+def STORETOSTACK :   Pseudo<(outs), (ins),
+                              ";#STORETOSTACK",
+                              []>;
+def LOADFROMSTACK :   Pseudo<(outs), (ins),
+                              ";#LOADFROMSTACK",
+                              []>;
+def REGXXSTACKEND :   Pseudo<(outs), (ins),
+                              ";#REGXXSTACKEND",
+                              []>;
+
 let Uses = [BP] in {
 def PicoblazeGETBP_INSTR : Pseudo<(outs GR8:$dst), (ins ),
                               "LOAD $dst,BP ; \t#PicoblazeGETBP_INSTR",
@@ -234,16 +244,21 @@ let  mayLoad=1 in {
 
 
 def FETCH_I  : FALUI<0b101110,
-                   (outs GR8:$dst), (ins  i8imm:$src),
-                   "FETCH \t{$dst,$src} ;\tFETCH_I",
-                   [( set GR8:$dst,(load imm:$src))]>;
+                   (outs GR8:$dst), (ins  i8imm:$ptr),
+                   "FETCH \t{$dst,$ptr} ;\tFETCH_I",
+                   [( set GR8:$dst,(load imm:$ptr))]>;
 
 def FETCH_R  : FALUI<0b101110,
-                   (outs GR8:$dst), (ins  GR8:$src),
-                   "FETCH \t{$dst,$src} ;\tFETCH_R",
-                   [( set GR8:$dst,(load GR8:$src))]>;
+                   (outs GR8:$dst), (ins  GR8:$ptr),
+                   "FETCH \t{$dst,$ptr} ;\tFETCH_R",
+                   [( set GR8:$dst,(load GR8:$ptr))]>;
 
+def FETCH_FRAMEI  : FALUI<0b101110,
+                   (outs GR8:$dst), (ins  i8imm:$ptr),
+                   "FETCH \t{$dst,$ptr} ;\tFETCH_FRAMEI",
+                   [( set GR8:$dst,(load imm:$ptr))]>;
 }
+
 
 
  let Constraints = "$src = $dst" ,
@@ -341,15 +356,19 @@ def LOAD_I2     : FALUI<0b000000,
 let  mayStore=1 in {
 
 def STORE_I  : FALUI<0b101110,
-                   (outs), (ins i8imm:$dst, GR8:$value),
-                   "STORE \t{$value,$dst}",
-                   [(store GR8:$value , imm:$dst)]>;
+                   (outs), (ins i8imm:$ptr, GR8:$value),
+                   "STORE \t{$value,$ptr}",
+                   [(store GR8:$value , imm:$ptr)]>;
 
 def STORE_R  : FALUI<0b101111,
-                   (outs), (ins GR8:$dst, GR8:$value),
-                   "STORE \t{$value,$dst}",
-                   [(store GR8:$value, GR8:$dst)]>;
+                   (outs), (ins GR8:$ptr, GR8:$value),
+                   "STORE \t{$value,$ptr}",
+                   [(store GR8:$value, GR8:$ptr)]>;
 
+def STORE_FRAMEI  : FALUI<0b101110,
+                   (outs), (ins GR8:$value ,i8imm:$ptr),
+                   "STORE \t{$value,$ptr};\tSTORE_FRAMEI",
+                   [(store GR8:$value , imm:$ptr)]>;
 }
 
 

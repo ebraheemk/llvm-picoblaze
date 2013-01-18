@@ -48,7 +48,7 @@ PicoblazeRegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const
   const TargetFrameLowering *TFI = MF->getTarget().getFrameLowering();
   const Function* F = MF->getFunction();
   static const uint16_t CalleeSavedRegs[] = {
-    Picoblaze::BP, 
+    //Picoblaze::BP, 
     0
   };
   static const uint16_t CalleeSavedRegsFP[] = {
@@ -141,11 +141,11 @@ PicoblazeRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
  
   //MI.getOperand(i).ChangeToRegister(ScratchReg, false,false,true);
   BuildMI(MBB, II, dl, TII.get(Picoblaze::ADD8ri), Picoblaze::BP)
-		 .addReg(Picoblaze::BP)
+		// .addReg(Picoblaze::BP)
 		 .addImm(Offset);
    II++;
   BuildMI(MBB,II, dl, TII.get(Picoblaze::ADD8ri), Picoblaze::BP)
-		 .addReg(Picoblaze::BP)
+		// .addReg(Picoblaze::BP)
 		 .addImm(-Offset);
   MI.getOperand(i).ChangeToRegister(Picoblaze::BP, false,false,true);
   //MI.getOperand(i).ChangeToImmediate(Offset);

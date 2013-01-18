@@ -35,31 +35,43 @@ PicoblazeInstrInfo::PicoblazeInstrInfo(PicoblazeTargetMachine &tm)
 }
 
 void PicoblazeInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
-                                          MachineBasicBlock::iterator MI,
-                                    unsigned SrcReg, bool isKill, int FrameIdx,
-                                          const TargetRegisterClass *RC,
-                                          const TargetRegisterInfo *TRI) const 
+                                             MachineBasicBlock::iterator MI,
+                                             unsigned SrcReg, bool isKill, int FrameIdx,
+                                             const TargetRegisterClass *RC,
+                                             const TargetRegisterInfo *TRI
+											 ) const 
 {
 	PR_FUNCTION();
-  DebugLoc DL;
-  if (MI != MBB.end()) DL = MI->getDebugLoc();
-  MachineFunction &MF = *MBB.getParent();
-  MachineFrameInfo &MFI = *MF.getFrameInfo();
-
+    DebugLoc DL;
+    if (MI != MBB.end()) DL = MI->getDebugLoc();
+    MachineFunction &MF = *MBB.getParent();MF.dump();
+    MachineFrameInfo &MFI = *MF.getFrameInfo();
+	    unsigned Align = MFI.getObjectAlignment(MVT::i8);
   MachineMemOperand *MMO =
-    MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(FrameIdx),
+    MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(MVT::i8),
                             MachineMemOperand::MOStore,
-                            MFI.getObjectSize(FrameIdx),
-                            MFI.getObjectAlignment(FrameIdx));
-
- if (RC == &Picoblaze::GR8RegClass)
+                            MFI.getObjectSize(MVT::i8),
+                            Align); 
+   BuildMI(MBB, MI, DL, get(Picoblaze::STORETOSTACK ));//.addMemOperand(MMO);	
+	if (RC == &Picoblaze::GR8RegClass)
    {
-	    //  BuildMI(MBB, MI, DL, get(Picoblaze::MOV8mr))
-		//   .addFrameIndex(FrameIdx).addImm(0)
-		//   .addReg(SrcReg, getKillRegState(isKill)).addMemOperand(MMO);
+	    //  BuildMI(MBB, MI, DL, get(Picoblaze::ADD8ri ))
+	//	   .addReg(Picoblaze::BP)
+	//	   .addImm(FrameIdx);
+	      BuildMI(MBB, MI, DL, get(Picoblaze::STORE_I))
+			.addImm(FrameIdx)
+			.addReg(SrcReg,getKillRegState(isKill))
+			;
+		   // .addMemOperand(MMO);	;//addReg(Picoblaze::BP);
+	   //   BuildMI(MBB, MI, DL, get(Picoblaze::ADD8ri ))
+	//	   .addReg(Picoblaze::BP)
+	//	   .addImm(-FrameIdx);
+	     	  
     }
   else
     llvm_unreachable("Cannot store this register to stack slot!");
+  BuildMI(MBB, MI, DL, get(Picoblaze::REGXXSTACKEND ));//.addMemOperand(MMO);	;	  
+  MF.dump();
 }
 
 void PicoblazeInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
@@ -69,24 +81,37 @@ void PicoblazeInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
                                            const TargetRegisterInfo *TRI) const
 {
 	PR_FUNCTION();
-	/*
   DebugLoc DL;
   if (MI != MBB.end()) DL = MI->getDebugLoc();
   MachineFunction &MF = *MBB.getParent();
+  MF.dump();
   MachineFrameInfo &MFI = *MF.getFrameInfo();
-
+    unsigned Align = MFI.getObjectAlignment(MVT::i8);
   MachineMemOperand *MMO =
-    MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(FrameIdx),
+    MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(MVT::i8),
                             MachineMemOperand::MOLoad,
-                            MFI.getObjectSize(FrameIdx),
-                            MFI.getObjectAlignment(FrameIdx));
+                            MFI.getObjectSize(MVT::i8),
+                            Align); 
+  BuildMI(MBB, MI, DL, get(Picoblaze::LOADFROMSTACK ));//.addMemOperand(MMO);
+  	if (RC == &Picoblaze::GR8RegClass)
+   {
+		//BuildMI(MBB, MI, DL, get(Picoblaze::ADD8ri ),Picoblaze::BP)
+		//	.addReg(Picoblaze::BP)
+		//	.addImm(FrameIdx);
+		//BuildMI(MBB, MI, DL, get(Picoblaze::FETCH_R), DestReg)
+		//	.addImm(FrameIdx);
+			//.addReg(Picoblaze::BP);
+		//BuildMI(MBB, MI, DL, get(Picoblaze::ADD8ri ),Picoblaze::BP)
+		//	.addImm(-FrameIdx);   
 
-  if (RC == &Picoblaze::GR8RegClass)
-    BuildMI(MBB, MI, DL, get(Picoblaze::MOV8rm))
-      .addReg(DestReg).addFrameIndex(FrameIdx).addImm(0).addMemOperand(MMO);
+	BuildMI(MBB, MI, DL, get(Picoblaze::FETCH_FRAMEI), DestReg)
+			.addImm(FrameIdx)
+			;//.addMemOperand(MMO);		
+	    }
   else
     llvm_unreachable("Cannot store this register to stack slot!");
-	*/
+  BuildMI(MBB, MI, DL, get(Picoblaze::REGXXSTACKEND ));//.addMemOperand(MMO);	    
+  MF.dump();
 }
 
 void PicoblazeInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
@@ -96,6 +121,8 @@ void PicoblazeInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
 {
 	PR_FUNCTION();
 	printf("%d,%d\n",DestReg,SrcReg);
+	MachineFunction &MF = *MBB.getParent();
+	MF.dump();
   unsigned Opc;
   if (Picoblaze::GR8RegClass.contains(DestReg, SrcReg))
     Opc = Picoblaze::LOAD_REG;
@@ -104,7 +131,7 @@ void PicoblazeInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
 
   BuildMI(MBB, I, DL, get(Opc), DestReg)
     .addReg(SrcReg, getKillRegState(KillSrc));
-	
+	MF.dump();
 }
 
 
