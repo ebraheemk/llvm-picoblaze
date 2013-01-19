@@ -13,7 +13,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "picoblaze.h"
+#include "Picoblaze.h"
 #include "PicoblazeMCInstLower.h"
 #include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"

@@ -253,10 +253,10 @@ def FETCH_R  : FALUI<0b101110,
                    "FETCH \t{$dst,$ptr} ;\tFETCH_R",
                    [( set GR8:$dst,(load GR8:$ptr))]>;
 
-def FETCH_FRAMEI  : FALUI<0b101110,
+def FETCH_FRAMEI  : Pseudo<
                    (outs GR8:$dst), (ins  i8imm:$ptr),
                    "FETCH \t{$dst,$ptr} ;\tFETCH_FRAMEI",
-                   [( set GR8:$dst,(load imm:$ptr))]>;
+                   []>;
 }
 
 
@@ -365,10 +365,10 @@ def STORE_R  : FALUI<0b101111,
                    "STORE \t{$value,$ptr}",
                    [(store GR8:$value, GR8:$ptr)]>;
 
-def STORE_FRAMEI  : FALUI<0b101110,
-                   (outs), (ins GR8:$value ,i8imm:$ptr),
+def STORE_FRAMEI  : Pseudo<
+                   (outs), (ins i8imm:$ptr , GR8:$value),
                    "STORE \t{$value,$ptr};\tSTORE_FRAMEI",
-                   [(store GR8:$value , imm:$ptr)]>;
+                   []>;
 }
 
 

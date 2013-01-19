@@ -83,7 +83,8 @@ public:
   //                      MachineBasicBlock *FBB,
   //                      const SmallVectorImpl<MachineOperand> &Cond,
   //                      DebugLoc DL) const;
-
+  virtual unsigned isLoadFromStackSlot(const MachineInstr *MI,
+                                       int &FrameIndex) const ;
 };
 
 }

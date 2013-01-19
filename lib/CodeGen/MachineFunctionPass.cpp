@@ -12,17 +12,24 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Function.h"
+#include <sstream>
+#include "llvm/Support/raw_ostream.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/CodeGen/MachineFunctionAnalysis.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/Passes.h"
+#include "llvm/CodeGen/MachineFunction.h"
 using namespace llvm;
 
 Pass *MachineFunctionPass::createPrinterPass(raw_ostream &O,
                                              const std::string &Banner) const {
   return createMachineFunctionPrinterPass(O, Banner);
 }
-
+#ifndef NDEBUG
+ // {
+	  static int passnum=0;
+ // }
+#endif
 bool MachineFunctionPass::runOnFunction(Function &F) {
   // Do not codegen any 'available_externally' functions at all, they have
   // definitions outside the translation unit.
@@ -30,7 +37,23 @@ bool MachineFunctionPass::runOnFunction(Function &F) {
     return false;
 
   MachineFunction &MF = getAnalysis<MachineFunctionAnalysis>().getMF();
-  return runOnMachineFunction(MF);
+
+  bool bret=runOnMachineFunction(MF);
+#ifndef NDEBUG
+  {
+	std::string ErrorInfo;
+	char  fname[16];
+	sprintf_s(fname,16,"pass%02d.txt",passnum);
+	passnum++;
+	raw_fd_ostream fd(fname,ErrorInfo);
+
+	fd<<this->getPassName() <<'\n';
+	MF.print(fd);
+	
+
+  }
+#endif
+  return bret;
 }
 
 void MachineFunctionPass::getAnalysisUsage(AnalysisUsage &AU) const {

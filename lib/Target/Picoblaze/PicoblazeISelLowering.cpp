@@ -12,7 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 #define DEBUG_TYPE "Picoblaze-lower"
-#include "llvm/codegen/PseudoSourceValue.h"
+#include "llvm/CodeGen/PseudoSourceValue.h"
 #include "PicoblazeISelLowering.h"
 #include "Picoblaze.h"
 #include "PicoblazeMachineFunctionInfo.h"

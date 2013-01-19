@@ -438,31 +438,30 @@ SDNode *PicoblazeDAGToDAGISel::Select(SDNode *Node)
    case ISD::FrameIndex: {
 	   printf("FrameIndex\n");
 	
-             FrameIndexSDNode*FG=dyn_cast<FrameIndexSDNode>(Node);
-	       SDValue c = CurDAG->getTargetConstant(FG->getIndex(), MVT::i8);
+          FrameIndexSDNode*FG=dyn_cast<FrameIndexSDNode>(Node);
+		  if( FG->getIndex()==0)
+		  {
+        
+	        return CurDAG->SelectNodeTo(Node,Picoblaze::PicoblazeGETBP_INSTR,
+											  MVT::i8
+											  );
+		  }else
+		  {
+			  SDValue c = CurDAG->getTargetConstant(FG->getIndex(), MVT::i8);
 
-	      SDNode *n1= CurDAG->getMachineNode(Picoblaze::LOAD_REGI,
-										  Node->getDebugLoc(),
-										  MVT::i8,
-										  c);
+			  SDNode *n2= CurDAG->getMachineNode(Picoblaze::PicoblazeGETBP_INSTR,
+											  Node->getDebugLoc(),
+											  MVT::i8);
 
-	      SDNode *n2= CurDAG->getMachineNode(Picoblaze::PicoblazeGETBP_INSTR,
-										  Node->getDebugLoc(),
-										  MVT::i8);
-	      SDNode *n3= CurDAG->getMachineNode(Picoblaze::LOAD_REG,
-										  Node->getDebugLoc(),
-										  MVT::i8,
-										  SDValue(n2,0));
-		//SDNode *n4= CurDAG->getMachineNode(  Picoblaze::ADD8rr,
-		//								  Node->getDebugLoc(),
-		//								  MVT::i8,
-		//								  SDValue(n1,0) ,
-		//								  SDValue(n3,0)
-		//								  );
-										  
-	   // SDNode *n3=	this->SelectCode(sdv.getNode());
-	    
-	   return CurDAG->SelectNodeTo(Node,Picoblaze::ADD8rr,MVT::i8,SDValue(n1,0),SDValue(n3,0));
+			 return  CurDAG->SelectNodeTo( Node, Picoblaze::ADD8ri,
+											  MVT::i8,
+											  SDValue(n2,0) ,
+											  c
+											  );
+		  }
+	
+				    
+	   //return CurDAG->SelectNodeTo(Node,Picoblaze::ADD8rr,MVT::i8,SDValue(n1,0),SDValue(n3,0));
 	   									 
 		
 
