@@ -71,7 +71,8 @@ BitVector PicoblazeRegisterInfo::getReservedRegs(const MachineFunction &MF) cons
   Reserved.set(Picoblaze::BP);
   Reserved.set(Picoblaze::SP);
   Reserved.set(Picoblaze::STATUS);
-//  Reserved.set(Picoblaze::PC);
+
+  //  Reserved.set(Picoblaze::PC);
 
 
   return Reserved;
@@ -141,11 +142,11 @@ PicoblazeRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
  
   //MI.getOperand(i).ChangeToRegister(ScratchReg, false,false,true);
   BuildMI(MBB, II, dl, TII.get(Picoblaze::ADD8ri), Picoblaze::BP)
-		// .addReg(Picoblaze::BP)
+		 .addReg(Picoblaze::BP)
 		 .addImm(Offset);
    II++;
   BuildMI(MBB,II, dl, TII.get(Picoblaze::ADD8ri), Picoblaze::BP)
-		// .addReg(Picoblaze::BP)
+		 .addReg(Picoblaze::BP)
 		 .addImm(-Offset);
   MI.getOperand(i).ChangeToRegister(Picoblaze::BP, false,false,true);
   //MI.getOperand(i).ChangeToImmediate(Offset);

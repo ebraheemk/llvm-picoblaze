@@ -98,7 +98,30 @@ def LOADFROMSTACK :   Pseudo<(outs), (ins),
 def REGXXSTACKEND :   Pseudo<(outs), (ins),
                               ";#REGXXSTACKEND",
                               []>;
-
+def PROLOGUESTART :   Pseudo<(outs), (ins),
+                              ";#PROLOGUESTART",
+                              []>;
+def PROLOGUEEND :   Pseudo<(outs), (ins),
+                              ";#PROLOGUEEND",
+                              []>;
+def EPILOGUESTART :   Pseudo<(outs), (ins),
+                              ";#EPILOGUESTART",
+                              []>;
+def EPILOGUEEND :   Pseudo<(outs), (ins),
+                              ";#EPILOGUEEND",
+                              []>;
+def SPILLCALLEESAVEDSTART :   Pseudo<(outs), (ins),
+                              ";#SPILLCALLEESAVEDSTART",
+                              []>;
+def SPILLCALLEESAVEDEND :   Pseudo<(outs), (ins),
+                              ";#SPILLCALLEESAVEDEND",
+                              []>;
+def RESTORECALLEESAVEDSTART :   Pseudo<(outs), (ins),
+                              ";#RESTORECALLEESAVEDSTART",
+                              []>;
+def RESTORECALLEESAVEDEND :   Pseudo<(outs), (ins),
+                              ";#RESTORECALLEESAVEDEND",
+                              []>;
 let Uses = [BP] in {
 def PicoblazeGETBP_INSTR : Pseudo<(outs GR8:$dst), (ins ),
                               "LOAD $dst,BP ; \t#PicoblazeGETBP_INSTR",

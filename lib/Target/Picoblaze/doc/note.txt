@@ -1,1 +1,3 @@
-  
+需要参考 
+关于SSA的解释
+http://en.wikipedia.org/wiki/Static_single_assignment_form  

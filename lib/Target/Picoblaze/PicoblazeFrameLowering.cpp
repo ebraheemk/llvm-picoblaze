@@ -43,6 +43,7 @@ bool PicoblazeFrameLowering::hasReservedCallFrame(const MachineFunction &MF) con
 void PicoblazeFrameLowering::emitPrologue(MachineFunction &MF) const 
 {
 	PR_FUNCTION();
+	return;
 
   MachineBasicBlock &MBB = MF.front();   // Prolog goes in entry BB
   MachineFrameInfo *MFI = MF.getFrameInfo();
@@ -194,8 +195,8 @@ PicoblazeFrameLowering::spillCalleeSavedRegisters(MachineBasicBlock &MBB,
                                         const TargetRegisterInfo *TRI) const 
 {
 	PR_FUNCTION();
-	return false;
-	/*
+
+
   if (CSI.empty())
     return false;
 
@@ -205,17 +206,26 @@ PicoblazeFrameLowering::spillCalleeSavedRegisters(MachineBasicBlock &MBB,
   MachineFunction &MF = *MBB.getParent();
   const TargetInstrInfo &TII = *MF.getTarget().getInstrInfo();
   PicoblazeMachineFunctionInfo *MFI = MF.getInfo<PicoblazeMachineFunctionInfo>();
-  MFI->setCalleeSavedFrameSize(CSI.size() * 2);
-
+  MFI->setCalleeSavedFrameSize(CSI.size() );
+  BuildMI(MBB, MI, DL, TII.get(Picoblaze::SPILLCALLEESAVEDSTART));
   for (unsigned i = CSI.size(); i != 0; --i) {
     unsigned Reg = CSI[i-1].getReg();
     // Add the callee-saved register as live-in. It's killed at the spill.
     MBB.addLiveIn(Reg);
-    BuildMI(MBB, MI, DL, TII.get(Picoblaze::PUSH16r))
-      .addReg(Reg, RegState::Kill);
+    {
+		BuildMI(MBB, MI, DL, TII.get(Picoblaze::STORE_R))
+		 .addReg(Picoblaze::SP)
+		 .addReg(Reg, RegState::Kill);
+
+		BuildMI(MBB, MI, DL, TII.get(Picoblaze::ADD8ri))
+		 .addReg(Picoblaze::SP)
+		 .addImm(-1);
+
+	}
   }
+  BuildMI(MBB, MI, DL, TII.get(Picoblaze::SPILLCALLEESAVEDEND));
   return true;
-  */
+
 }
 
 bool
@@ -226,7 +236,7 @@ PicoblazeFrameLowering::restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
 {
 	PR_FUNCTION();
 	return false;
-	/*
+
   if (CSI.empty())
     return false;
 
@@ -235,12 +245,22 @@ PicoblazeFrameLowering::restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
 
   MachineFunction &MF = *MBB.getParent();
   const TargetInstrInfo &TII = *MF.getTarget().getInstrInfo();
-
+   BuildMI(MBB, MI, DL, TII.get(Picoblaze::RESTORECALLEESAVEDSTART));
   for (unsigned i = 0, e = CSI.size(); i != e; ++i)
-    BuildMI(MBB, MI, DL, TII.get(Picoblaze::POP16r), CSI[i].getReg());
+  {
 
+		BuildMI(MBB, MI, DL, TII.get(Picoblaze::ADD8ri))
+		.addReg(Picoblaze::SP)
+		.addImm(1);
+
+		BuildMI(MBB, MI, DL, TII.get(Picoblaze::FETCH_R), CSI[i].getReg())
+			.addReg(Picoblaze::SP);
+
+
+  }
+   BuildMI(MBB, MI, DL, TII.get(Picoblaze::RESTORECALLEESAVEDEND));
   return true;
-  */
+ 
 }
 
 void

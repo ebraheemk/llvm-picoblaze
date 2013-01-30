@@ -438,8 +438,17 @@ SDNode *PicoblazeDAGToDAGISel::Select(SDNode *Node)
    case ISD::FrameIndex: {
 	   printf("FrameIndex\n");
 	
-          FrameIndexSDNode*FG=dyn_cast<FrameIndexSDNode>(Node);
-		  if( FG->getIndex()==0)
+	   int FI = cast<FrameIndexSDNode>(Node)->getIndex();
+	   /*assert(Node->getValueType(0) == MVT::i8);
+		
+		SDValue TFI = CurDAG->getTargetFrameIndex(FI, MVT::i8);
+		if (Node->hasOneUse())
+		  return CurDAG->SelectNodeTo(Node, Picoblaze::ADD8rr, MVT::i8,
+									  TFI, CurDAG->getRegister(Picoblaze::BP, MVT::i8));
+		return CurDAG->getMachineNode(Picoblaze::ADD8rr, dl, MVT::i8,
+									  TFI, CurDAG->getRegister(Picoblaze::BP, MVT::i8));
+		*/  
+		  if( FI==0)
 		  {
         
 	        return CurDAG->SelectNodeTo(Node,Picoblaze::PicoblazeGETBP_INSTR,
@@ -447,7 +456,7 @@ SDNode *PicoblazeDAGToDAGISel::Select(SDNode *Node)
 											  );
 		  }else
 		  {
-			  SDValue c = CurDAG->getTargetConstant(FG->getIndex(), MVT::i8);
+			  SDValue c = CurDAG->getTargetConstant(FI, MVT::i8);
 
 			  SDNode *n2= CurDAG->getMachineNode(Picoblaze::PicoblazeGETBP_INSTR,
 											  Node->getDebugLoc(),
@@ -459,12 +468,6 @@ SDNode *PicoblazeDAGToDAGISel::Select(SDNode *Node)
 											  c
 											  );
 		  }
-	
-				    
-	   //return CurDAG->SelectNodeTo(Node,Picoblaze::ADD8rr,MVT::i8,SDValue(n1,0),SDValue(n3,0));
-	   									 
-		
-
 /*
 	  assert(Node->getValueType(0) == MVT::i8);
     int FI = cast<FrameIndexSDNode>(Node)->getIndex();

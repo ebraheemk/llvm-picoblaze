@@ -32,14 +32,14 @@ public:
 
   /// emitProlog/emitEpilog - These methods insert prolog and epilog code into
   /// the function.
-  void emitPrologue(MachineFunction &MF) const;
-  void emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const;
+  virtual void emitPrologue(MachineFunction &MF) const;
+  virtual void emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const;
 
-  bool spillCalleeSavedRegisters(MachineBasicBlock &MBB,
+  virtual bool spillCalleeSavedRegisters(MachineBasicBlock &MBB,
                                  MachineBasicBlock::iterator MI,
                                  const std::vector<CalleeSavedInfo> &CSI,
                                  const TargetRegisterInfo *TRI) const;
-  bool restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
+  virtual bool restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
                                    MachineBasicBlock::iterator MI,
                                    const std::vector<CalleeSavedInfo> &CSI,
                                    const TargetRegisterInfo *TRI) const;
